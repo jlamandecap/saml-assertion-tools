@@ -12,12 +12,16 @@ import org.opensaml.SAMLAuthenticationStatement;
 import org.opensaml.SAMLNameIdentifier;
 import org.opensaml.SAMLSubject;
 import org.opensaml.xml.util.XMLHelper;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author jlamande
  */
 public class SamlTokenAssertionGenerator {
+    
+    private static final org.slf4j.Logger LOGGER
+            = LoggerFactory.getLogger(SamlTokenAssertionGenerator.class);
 
     /**
      * SAML Version hard-coded
@@ -54,8 +58,8 @@ public class SamlTokenAssertionGenerator {
 
     protected void traceAssertion(SAMLAssertion assertion) throws Exception {
         // Print the assertion to standard output
-        System.out.println("AMUserAssertion (SAML 1):\\n");
-        System.out.println(XMLHelper.prettyPrintXML(assertion.toDOM()));
+        LOGGER.debug("Assertion (pretty printed) : ");
+        LOGGER.debug(XMLHelper.prettyPrintXML(assertion.toDOM()));
     }
 
 }

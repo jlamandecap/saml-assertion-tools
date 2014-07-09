@@ -6,7 +6,7 @@
 package tools.saml.asserter;
 
 import java.net.URL;
-import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -14,8 +14,9 @@ import org.apache.log4j.Logger;
  */
 public class Main {
 
-    private static final Logger LOGGER = Logger.getLogger(Main.class);
-    
+    private static final org.slf4j.Logger LOGGER
+            = LoggerFactory.getLogger(Main.class);
+
     public static void main(String[] args) throws Exception {
         Main runner = new Main();
         runner.run(args);
@@ -24,32 +25,45 @@ public class Main {
     public void run(String[] args) throws Exception {
         LOGGER.debug("Mode CLI");
         CommandLines.debugArgs(args);
-        
-        System.out.println("Provide a soap request or press enter :");
-        String soapRequest = CommandLines.scanCommandLinePipedInput();//readFromCommandLinePipedInput();
-        
-        if(args.length < 5) {
+
+        System.out.println("Provide a soap request and terminate by a blank line"
+                + " followed by enter "
+                + "\nor simply press enter key to ignore :");
+        String soapRequest = CommandLines.captureCommandLineInput();//readFromCommandLinePipedInput();
+
+        if (args.length < 5) {
             System.out.println("Usage : java -jar xxxx.jar cli <login> "
                     + "<token_issuer> <jks_file_path> <jks_passphrase> "
                     + "<key_alias> <key_passphrase> "
                     + "[<validity_interval_in_seconds>]");
         } else {
-            SignedSamlTokenAssertionGenerator generator = 
-                    new SignedSamlTokenAssertionGenerator();
-            URL url = new URL(args[2]);
+            SignedSamlTokenAssertionGenerator generator
+                    = new SignedSamlTokenAssertionGenerator();
+
+            URL url = CommandLines.parseUrlArg(args[2]);
             LOGGER.debug("JKS url : " + url);
             String assertion;
-            if(args.length == 6) {
-                assertion = generator.generate(args[0], Long.MIN_VALUE, args[1], url, args[3], args[4], args[5]);
-            } else {
-                assertion = generator.generate(args[0], Long.valueOf(args[6]), args[1], url, args[3], args[4], args[5]);
-            }
-
-            if(!"".equals(soapRequest)) {
-                // TODO : insert assertion in soap request
-                System.out.println(assertion);
-            } else {
-                System.out.println(assertion);
+            try {
+                SignedSamlTokenAssertionGenerator.Parameters.Builder paramBuilder = SignedSamlTokenAssertionGenerator.Parameters.builder();
+                paramBuilder.withLogin(args[0])
+                .withIssuer(args[1])
+                .withKeystore(url)
+                .withKeystorePass(args[3])
+                .withKeyAlias(args[4])
+                .withKeyPass(args[5]);
+                if (args.length > 6) {
+                    paramBuilder.withValidityTime(args[6]);
+                }
+                assertion = generator.generate(paramBuilder.build());
+                if (!"".equals(soapRequest)) {
+                    // TODO : insert assertion in soap request
+                    System.out.println(assertion);
+                } else {
+                    System.out.println(assertion);
+                }
+            } catch (IllegalArgumentException e) {
+                LOGGER.error(e.getMessage());
+                LOGGER.debug(e.getMessage(), e);
             }
         }
     }

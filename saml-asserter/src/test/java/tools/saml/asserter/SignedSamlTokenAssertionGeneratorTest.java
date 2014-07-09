@@ -22,6 +22,7 @@ public class SignedSamlTokenAssertionGeneratorTest extends SamlTokenAssertionGen
 
     /**
      * Test of generate method, of class SignedSamlTokenAssertionGenerator.
+     * @throws java.lang.Exception
      */
     @Test
     @Override
@@ -47,19 +48,17 @@ public class SignedSamlTokenAssertionGeneratorTest extends SamlTokenAssertionGen
         assertTrue("Returned assertion should contain the provided login", assertion.contains(login));
         assertTrue("Returned assertion must be signed", assertion.contains("Signature"));
     }
-
-    /**
-     * Test of loadXMLFromString method, of class SignedSamlTokenAssertionGenerator.
-     */
-    @Test
-    public void testLoadXMLFromString() throws Exception {
-    }
-
-    /**
-     * Test of getKey method, of class SignedSamlTokenAssertionGenerator.
-     */
-    @Test
-    public void testGetKey() throws Exception {
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testGenerateBadParams() throws Exception {
+        String login = null;
+        Long time = 0L;
+        String issuer = "";
+        SignedSamlTokenAssertionGenerator generator 
+                = new SignedSamlTokenAssertionGenerator();
+        String assertion = generator.generate(login, time, issuer,
+                SignedSamlTokenAssertionGeneratorTest.class.getResource("/demo.jks"), "", "", "");
+        System.out.println("Assertion : " + assertion);
     }
 
 }
